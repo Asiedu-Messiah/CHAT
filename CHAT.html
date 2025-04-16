@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat App</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        /* Auth Screen */
+        #auth-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            height: 100%;
+        }
+        
+        #auth-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        #auth-form h1 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        #auth-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        #auth-form button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        #auth-form button:hover {
+            background-color: #2980b9;
+        }
+        
+        /* Chat Container */
+        #chat-container {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        /* Header */
+        #chat-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #online-count {
+            background-color: var(--success);
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        /* Main Chat Area */
+        #chat-main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* Users List */
+        #users-list {
+            width: 250px;
+            background-color: var(--light);
+            padding: 1rem;
+            overflow-y: auto;
+            border-right: 1px solid #ddd;
+        }
+        
+        #users-list h3 {
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+        
+        .user-item {
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-item::before {
+            content: "";
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: var(--success);
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        /* Messages Area */
+        #messages-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        
+        .message {
+            margin-bottom: 1rem;
+            max-width: 70%;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .message.sent {
+            align-self: flex-end;
+            background-color: var(--secondary);
+            color: white;
+            border-bottom-right-radius: 0;
+        }
+        
+        .message.received {
+            align-self: flex-start;
+            background-color: var(--light);
+            border-bottom-left-radius: 0;
+        }
+        
+        .message-sender {
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 0.3rem;
+            text-align: right;
+        }
+        
+        /* Message Input */
+        #message-form {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #ddd;
+            background: white;
+        }
+        
+        #message-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        #message-form button {
+            margin-left: 1rem;
+            padding: 0 1.5rem;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            #users-list {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+                max-height: 150px;
+            }
+            
+            #chat-main {
+                flex-direction: column;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Authentication Screen -->
+        <div id="auth-screen">
+            <form id="auth-form">
+                <h1>Join the Chat</h1>
+                <input type="text" id="username-input" placeholder="Enter your username" required>
+                <button type="submit">Join Chat</button>
+            </form>
+        </div>
+        
+        <!-- Chat Container (hidden initially) -->
+        <div id="chat-container">
+            <div id="chat-header">
+                <h2>Simple Chat App</h2>
+                <div id="online-count">1 online</div>
+            </div>
+            
+            <div id="chat-main">
+                <div id="users-list">
+                    <h3>Online Users</h3>
+                    <div id="users-container"></div>
+                </div>
+                
+                <div id="messages-area"></div>
+            </div>
+            
+            <form id="message-form">
+                <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off" required>
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const authScreen = document.getElementById('auth-screen');
+        const authForm = document.getElementById('auth-form');
+        const usernameInput = document.getElementById('username-input');
+        const chatContainer = document.getElementById('chat-container');
+        const usersContainer = document.getElementById('users-container');
+        const messagesArea = document.getElementById('messages-area');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const onlineCount = document.getElementById('online-count');
+        
+        // Chat state
+        let username = '';
+        let users = [];
+        let messages = [];
+        
+        // Simulated "server" connection (in a real app, this would be WebSocket)
+        const server = {
+            users: [],
+            messages: [],
+            
+            connect(user) {
+                this.users.push(user);
+                this.broadcastUsers();
+                return user;
+            },
+            
+            disconnect(user) {
+                this.users = this.users.filter(u => u.id !== user.id);
+                this.broadcastUsers();
+            },
+            
+            sendMessage(message) {
+                this.messages.push(message);
+                this.broadcastMessage(message);
+            },
+            
+            broadcastUsers() {
+                // In a real app, this would emit to all connected clients
+                updateUsersList(this.users);
+            },
+            
+            broadcastMessage(message) {
+                // In a real app, this would emit to all connected clients
+                addMessageToUI(message, false);
+            }
+        };
+        
+        // Format time
+        function formatTime(date) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        // Add message to UI
+        function addMessageToUI(message, isSent) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-sender">${message.sender}</div>
+                <div class="message-text">${message.text}</div>
+                <div class="message-time">${formatTime(new Date(message.timestamp))}</div>
+            `;
+            
+            messagesArea.appendChild(messageDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+        
+        // Update users list
+        function updateUsersList(users) {
+            usersContainer.innerHTML = '';
+            users.forEach(user => {
+                const userDiv = document.createElement('div');
+                userDiv.className = 'user-item';
+                userDiv.textContent = user.name;
+                usersContainer.appendChild(userDiv);
+            });
+            onlineCount.textContent = `${users.length} online`;
+        }
+        
+        // Handle authentication
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            username = usernameInput.value.trim();
+            
+            if (username) {
+                // Simulate connecting to server
+                const user = server.connect({
+                    id: Date.now().toString(),
+                    name: username
+                });
+                
+                // Show chat interface
+                authScreen.style.display = 'none';
+                chatContainer.style.display = 'flex';
+                
+                // Load previous messages (in a real app, this would come from server)
+                messages.forEach(msg => addMessageToUI(msg, msg.sender === username));
+            }
+        });
+        
+        // Handle sending messages
+        messageForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = messageInput.value.trim();
+            
+            if (text) {
+                const message = {
+                    sender: username,
+                    text: text,
+                    timestamp: Date.now()
+                };
+                
+                // Add to UI immediately
+                addMessageToUI(message, true);
+                
+                // Send to server
+                server.sendMessage(message);
+                
+                // Clear input
+                messageInput.value = '';
+            }
+        });
+        
+        // Handle window close
+        window.addEventListener('beforeunload', () => {
+            if (username) {
+                // In a real app, we'd properly disconnect from the server
+                server.disconnect({ name: username });
+            }
+        });
+        
+        // Simulate some initial users and messages (for demo)
+        users = [
+            { id: '1', name: 'Alice' },
+            { id: '2', name: 'Bob' },
+            { id: '3', name: 'Charlie' }
+        ];
+        
+        messages = [
+            { sender: 'Alice', text: 'Hey everyone!', timestamp: Date.now() - 10000 },
+            { sender: 'Bob', text: 'Hi Alice! How are you?', timestamp: Date.now() - 8000 },
+            { sender: 'Charlie', text: 'Welcome to the chat!', timestamp: Date.now() - 5000 }
+        ];
+        
+        // Initialize UI with demo data
+        updateUsersList(users);
+    </script>
+</body>
+</html>
